@@ -1,0 +1,122 @@
+---
+title: "Correlação"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+```{r}
+y1 <- c(30, 28, 25, 21, 18, 15, 11)
+y2 <- c(10, 25, 36, 42, 58, 69, 72)
+
+cor.test(y1,y2,method="pearson",alternative="two.sided") 
+
+plot(y1, y2, pch=19, col=4)
+```
+
+```{r}
+dados <- data.frame(
+  prod = c(4.5, 4.3, 4.2, 4.4, 3.1, 3.4, 3.6, 3.5, 5.5, 5.8, 5.4, 5.6, 2.2, 1.8, 1.9, 2.4, 4.5, 4.7, 4.8, 4.6),
+  gra = c(44, 49, 42, 47, 47, 48, 44, 44, 35, 30, 34, 37, 60, 65, 68, 66, 45, 44, 43, 42),
+  alt = c(1.8, 2.2, 1.9, 2, 1.7, 2.2, 1.6, 2.1, 1.7, 2, 1.6, 1.9, 1.7, 1.9, 1.8, 1.6, 1.8, 1.9, 2.1, 1.7),
+  queb = c(14, 15, 12, 13, 8, 10, 9, 11, 18, 15, 16, 17, 5, 7, 6, 8, 13, 14, 15, 12)
+)
+
+head(dados)
+
+#Teste par a par
+
+cor.test(dados$prod,dados$gra,method="pearson",alternative="two.sided")
+
+cor.test(dados$prod,dados$alt,method="pearson",alternative="two.sided") 
+
+cor.test(dados$prod,dados$queb,method="pearson",alternative="two.sided") 
+
+cor.test(dados$gra,dados$queb,method="pearson",alternative="two.sided") 
+
+cor.test(dados$gra,dados$alt,method="pearson",alternative="two.sided") 
+
+cor.test(dados$queb,dados$alt,method="pearson",alternative="two.sided") 
+
+cor(dados)
+```
+
+```{r}
+library(mlbench)
+
+data(PimaIndiansDiabetes)
+
+df <- PimaIndiansDiabetes
+df$diabetes <- as.numeric(df$diabetes)
+
+cor(df)
+View(cor(df))
+
+library(corrplot)
+
+corrplot(cor(df), method = "color")
+corrplot(cor(df), method = "number")
+corrplot(cor(df), method = "circle")
+```
+
+```{r}
+dados <- data.frame(
+  Trat = c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5),
+  Rep = c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3),
+  PROD = c(80, 90, 85, 90, 95, 100, 100, 105, 110, 105, 110, 115, 115, 120, 125),
+  ALP = c(130, 133, 135, 135, 140, 137, 138, 140, 142, 144, 146, 145, 150, 148, 147),
+  MAT = c(135, 137, 133, 140, 142, 143, 128, 135, 125, 115, 120, 125, 150, 145, 140),
+  ACM = c(10, 7, 6, 3, 2, 5, 7, 5, 6, 9, 8, 7, 10, 12, 11),
+  FER = c(2, 1, 2, 4, 5, 4, 2, 3, 2, 4, 6, 5, 2, 1, 2),
+  PER = c(10, 12, 11, 30, 25, 15, 20, 20, 15, 10, 15, 10, 5, 3, 8),
+  LGR = c(1, 2, 1, 5, 6, 4, 8, 7, 6, 5, 3, 4, 1, 2, 1),
+  LPE = c(2, 3, 1, 4, 6, 5, 3, 2, 5, 6, 5, 4, 1, 2, 3)
+)
+
+head(dados)
+
+# Correlacao de Pearson
+cor(dados,dados, method = "pearson")
+
+# Correlacao de Spearman
+cor(dados,dados, method = "spearman")
+
+
+#Trabalhando com arquivo de media de tratamento
+dados1<-aggregate(x = dados[3:ncol(dados)], by = list(Trat=dados$Trat), FUN = mean)
+
+# Correlacao de Pearson
+cor(dados1,dados1, method = "pearson")
+
+# Correlacao de Spearman
+cor(dados1,dados1, method = "spearman")
+
+# Teste de shapiro-Wilk 
+norm.test<-list()
+
+for (i in 3:ncol(dados)){
+  names<-colnames(dados[i])
+  norm.test[[names]]<-shapiro.test(dados[,i])
+}
+
+norm.testfinal<-data.frame(do.call(rbind,norm.test))
+norm.testfinal
+
+#Remoção da coluna rep
+dadosnov<-dados[,c(-2)]
+
+library(corrplot)
+corrplot.mixed(cor(dadosnov), order="hclust", tl.col="black")
+
+library(psych)
+pairs.panels(dadosnov, scale=TRUE)
+
+library(GGally)
+ggpairs(dadosnov)
+
+ggcorr(dadosnov, nbreaks=8, palette='RdGy', label=TRUE, label_size=5, label_color='white')
+
+library(ggcorrplot)
+ggcorrplot(cor(dadosnov), p.mat = cor_pmat(dadosnov), hc.order=TRUE, type='lower')
+```

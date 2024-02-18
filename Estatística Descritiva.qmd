@@ -1,0 +1,104 @@
+---
+title: "Estatística descritiva"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+```{r}
+dados <- data.frame(
+  TRAT = c(1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4),
+  PROD = c(90, 98, 95, 93, 56, 59, 63, 51, 75, 73, 71, 89, 64, 68, 65, 63),
+  MAT = c(160, 155, 157, 153, 120, 115, 117, 135, 133, 130, 131, 132, 115, 110, 112, 113),
+  ALP = c(150, 145, 147, 120, 132, 137, 135, 136, 166, 164, 163, 160, 132, 135, 137, 134)
+)
+
+print(dados)
+```
+
+```{r}
+##Media
+m<-mean(dados$PROD, na.rm = T)
+m
+
+m1<-mean(dados$MAT, na.rm = T)
+m1
+
+m2<-mean(dados$ALP, na.rm = T)
+m2
+
+##Mediana
+me<-median(dados$PROD, na.rm = T)
+me
+
+me1<-median(dados$MAT, na.rm = T)
+me1
+
+me2<-median(dados$ALP, na.rm = T)
+me2
+
+## Amplitude total
+AT<-max(dados$PROD, na.rm = T)-min(dados$PROD, na.rm = T)
+AT
+
+AT1<-max(dados$MAT, na.rm = T)-min(dados$MAT, na.rm = T)
+AT1
+
+AT2<-max(dados$ALP, na.rm = T)-min(dados$ALP, na.rm = T)
+AT2
+
+##Variancia
+va<-var(dados$PROD, na.rm = T)
+va
+
+va1<-var(dados$MAT, na.rm = T)
+va1
+
+va2<-var(dados$ALP, na.rm = T)
+va2
+
+##Desvio padrao
+dp<-sd(dados$PROD)
+dp
+dp1<-sqrt(var(dados$PROD))
+dp1
+
+dp2<-sd(dados$MAT)
+dp2
+dp3<-sqrt(var(dados$MAT))
+dp3
+
+dp4<-sd(dados$ALP)
+dp4
+dp5<-sqrt(var(dados$ALP))
+dp5
+
+##Coeficiente de variacao
+CV<-(dp/m)*100
+CV
+
+CV1<-(dp2/m1)*100
+CV1
+
+CV2<-(dp4/m2)*100
+CV2
+
+##Erro padrao da media
+epm<-dp/length(dados$PROD)
+epm
+
+epm1<-dp/length(dados$MAT)
+epm1
+
+epm2<-dp/length(dados$ALP)
+epm2
+
+##Correlacao
+co<-cor(dados[,2:4])
+co
+
+##Covariancia
+covar<-cov(dados[,2:4])
+covar
+```

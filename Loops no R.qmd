@@ -1,0 +1,225 @@
+---
+title: "Loops no R"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+Loops são estruturas que permitem a repetição de um bloco de código várias vezes.
+
+**Tipos:**
+
+**for** - é usado quando você sabe exatamente quantas vezes deseja repetir um bloco de código.
+
+**while** - é usado quando a condição para a repetição não é conhecida antecipadamente, e o bloco de código é repetido enquanto a condição é verdadeira.
+
+## for
+
+```{r}
+#   for (variavel in vetor) {
+#        código a ser repetido
+#   }
+```
+
+```{r}
+for (i in 1:5) {   # Para cada valor de i de 1 a 5, execute o bloco de código
+  print(i)         # Imprime o valor atual de i
+}
+
+j <- 5
+for (i in 1:j){   # Para cada valor de i de 1 a j, execute o bloco de código abaixo
+  k <- i * 2      # Multiplique i por 2
+  print(k)        # Imprime o valor atual de k   
+}
+```
+
+```{r}
+peso <- c(80, 70, 90, 55)
+altura <- c(1.77, 1.60, 1.65, 1.90)
+n <- length(peso)
+
+vetor <- numeric(n) #Criando um vetor vazio
+
+for (i in 1:n) {
+  vetor[i] <- print(peso[i] / altura[i] ^ 2) #Salvando em um vetor vazio
+}
+```
+
+```{r}
+# dados
+dados <- mtcars
+
+# Colunas no data.frame
+n <- ncol(dados)
+
+# Vetor para armazenar resultados
+medias <- numeric(n)
+
+# Nomeando vetor com nomes das colunas
+names(medias) <- colnames(dados)
+
+# Loop para cada coluna
+for(i in 1:n){
+  medias[i] <- mean(dados[,i])
+   print(paste("Média de", names(medias)[i], ":", medias[i]))
+}
+```
+
+## while
+
+```{r}
+#   while (condicao) {
+#     código a ser repetido
+#   }
+```
+
+```{r}
+i <- 1             # Inicializa a variável i com o valor 1
+while (i <= 5) {   # Enquanto i for menor ou igual a 5, execute o bloco de código
+  print(i)         # Imprime o valor atual de i
+  i <- i + 1       # Incrementa o valor de i em 1
+}
+
+i <- 1             # Inicializa a variável i com o valor 1
+while (i <= 5){    # Enquanto i for menor ou igual a 5, execute o bloco de código
+  print(i * 2)     # Imprime o valor atual de i multiplicado por 2
+  i <- i + 1       # Incrementa o valor de i em 1
+}
+# [1] 2
+# [1] 4
+# [1] 6
+# [1] 8
+# [1] 10
+```
+
+```{r}
+peso <- c(80, 70, 90, 55)
+altura <- c(1.77, 1.60, 1.65, 1.90)
+
+n <- length(peso)
+
+vetor <- numeric(n)  # Criando um vetor vazio
+
+i <- 1                   # Inicializando o índice fora do loop
+while (i <= n) {         #Enquanto i for menor ou igual a n
+  vetor[i] <- peso[i] / altura[i] ^ 2
+  print(vetor[i])        # Imprimindo a razão peso / altura ao longo do loop
+  i <- i + 1             # Incrementando o índice
+}
+```
+
+```{r}
+# dados
+dados <- mtcars
+
+# Colunas no data.frame
+n <- ncol(dados)
+
+# Vetor para armazenar resultados
+medias <- numeric(n)
+
+# Nomeando vetor com nomes das colunas
+names(medias) <- colnames(dados)
+
+# Inicializando o índice fora do loop
+i <- 1
+
+# Loop para cada coluna
+while (i <= n) {
+  medias[i] <- mean(dados[, i])
+  print(paste("Média de", names(medias)[i], ":", medias[i]))
+  i <- i + 1  # Incrementando o índice
+}
+
+```
+
+## Condicionais - if e else
+
+São estruturas de controle de fluxo em programação que permitem a execução condicional de blocos de código.
+
+**if** - é usado para avaliar uma condição e executar um bloco de código apenas se essa condição for verdadeira.
+
+**else** - é usado para especificar um bloco de código a ser executado quando a condição do **`if`** for falsa.
+
+```{r}
+#   if (condicao) {
+#       código a ser executado se a condição for verdadeira
+#   } else {
+#       código a ser executado se a condição for falsa
+#   }
+```
+
+```{r}
+idade <- 15
+if (idade >= 18) {
+  print("Você é maior de idade.")
+} else {
+  print("Você é menor de idade.")
+}
+```
+
+```{r}
+# Dados
+alunos <- data.frame(
+  Nome = c("Alice", "Bruno", "Carlos", "Daniel"),
+  Matematica = c(80, 75, 90, 65),
+  Historia = c(60, 85, 78, 80)
+)
+
+print(alunos)
+
+# Classificar os alunos como "Aprovado" ou "Reprovado" em Matemática
+for (i in 1:nrow(alunos)) {
+  if (alunos$Matematica[i] >= 75) {
+    alunos$Resultado[i] <- "Aprovado"
+  } else {
+    alunos$Resultado[i] <- "Reprovado"
+  }
+}
+
+print(data.frame(Nome = alunos$Nome, Matematica = alunos$Matematica, Resultado = alunos$Resultado))
+
+# Classificar os alunos como "Aprovado" ou "Reprovado" em História
+linha <- 1
+while (linha <= nrow(alunos)) {
+  if (alunos$Historia[linha] >= 80) {
+    alunos$Resultado2[linha] <- "Aprovado"
+  } else {
+    alunos$Resultado2[linha] <- "Reprovado"
+  }
+  linha <- linha + 1
+}
+
+print(data.frame(Nome = alunos$Nome, Historia = alunos$Historia, Resultado = alunos$Resultado2))
+```
+
+```{r}
+# Dados
+agricultura <- data.frame(
+  Cultura = c("Milho", "Trigo", "Soja", "Arroz", "Café", "Algodão", "Feijão", "Maçãs", "Uvas", "Cana-de-açúcar", "Tomate", "Batata", "Cacau", "Laranjas", "Cenoura", "Cebola", "Pêssegos", "Abacaxi", "Melancias", "Azeitonas"),
+  Produtividade = c(1500, 1200, 1800, 900, 300, 400, 800, 200, 250, 1000, 700, 600, 150, 180, 450, 300, 120, 160, 100, 80),
+  Regiao = c("Sudeste", "Sul", "Centro-Oeste", "Nordeste", "Norte", "Sudeste", "Centro-Oeste", "Sul", "Sul", "Nordeste", "Sudeste", "Sul", "Norte", "Sul", "Nordeste", "Sudeste", "Sul", "Norte", "Nordeste", "Norte")
+)
+
+print(agricultura)
+
+# Adicionando a coluna "StatusProducao" inicializada com NA
+agricultura$StatusProducao <- NA
+
+# Atribuindo status de produção
+for (i in 1:nrow(agricultura)) {
+  if (agricultura$Produtividade[i] > 500) {
+    agricultura$StatusProducao[i] <- "Alta"
+  } else {
+    agricultura$StatusProducao[i] <- "Baixa"
+  }
+}
+
+print(agricultura)
+```
+
+```{r}
+
+
+```

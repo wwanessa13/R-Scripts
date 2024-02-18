@@ -1,0 +1,318 @@
+---
+title: "Gráficos com ggplot2"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+**ggplot(**dados**):** inicializa um objeto ggplot.
+
+1.  **geoms:** define o tipo de mapa.
+
+    -   geom_line
+
+    -   geom_point
+
+    -   geom_bar
+
+    -   geom_boxplot
+
+    -   geom_smooth
+
+    -   geom_histogram
+
+    -   geom_density
+
+    -   geom_area
+
+    -   geom_abline
+
+    -   geom_tile
+
+2.  **aes():** define mapeamentos estéticos.
+
+    -   x e y
+
+    -   color
+
+    -   fill
+
+    -   shape
+
+    -   size
+
+3.  **labs():** define os rótulos dos eixos x e y, e do título.
+
+4.  **theme():** permite personalizar a aparência geral do gráfico, como cores, tamanhos de fonte, fundo e outros elementos visuais.
+
+5.  **facet_wrap() e facet_grid():** dividem o gráfico com base em uma ou duas variáveis categóricas, respectivamente.
+
+6.  **scale_XXXX():** Controla a escala dos eixos e de outras características visuais, como cores e tamanhos.
+
+7.  **coord_XXXX():** Define a coordenação do sistema de referência do gráfico.
+
+```{r}
+library(ggplot2)
+
+library(gapminder)
+```
+
+```{r}
+brazil <- gapminder[gapminder$country == "Brazil", ]
+```
+
+### Gráfico de linha
+
+```{r}
+ggplot(brazil) + 
+  geom_line(mapping = aes(x = year, y = gdpPercap, color = "red")) +
+  labs(title = "PIB per capita ao longo dos anos", x = "Ano", y = "PIB per capita")
+```
+
+### Gráfico de pontos
+
+```{r}
+ggplot(brazil) + 
+  geom_point(mapping = aes(x = year, y = pop, color = lifeExp)) +
+  labs(title = "População do Brasil ao longo dos anos", x = "Ano", y = "População")
+```
+
+```{r}
+ano <- subset(gapminder, year == 2007 & continent == "Americas")
+```
+
+### Gráfico de barras
+
+```{r}
+ggplot(ano, aes(x = pop, y = country, fill = lifeExp)) +
+  geom_bar(stat = "identity", alpha = 0.5) +
+  scale_fill_gradient(low = "black", high = "green") +
+  labs(title = "População por País Americano em 2007", x = "População", y = "País")
+```
+
+### Sobreposição de gráficos
+
+```{r}
+ggplot(mtcars, aes(y = mpg, x = disp)) + 
+  geom_point(shape = 5, size = 4, color = "green") +
+  geom_smooth(method = "lm")
+```
+
+### Múltiplos gráficos
+
+```{r}
+ggplot(mtcars, aes(x = disp, y = mpg)) +
+  geom_point(shape = 6) +
+  facet_wrap(~ cyl)
+```
+
+### Personalização da Legenda
+
+```{r}
+head(PlantGrowth)
+
+bp <- ggplot(data = PlantGrowth, aes(x = group, y = weight, fill = group)) +
+  geom_boxplot()
+
+bp
+
+#Alterar a ordem dos itens da legenda
+bp + scale_fill_discrete(breaks=c("trt1", "ctrl", "trt2"))
+
+#Renomear a legenda
+bp + labs(fill = "Exp")
+
+# Tamanho do texto da legenda
+bp + theme (legend.text = element_text(size = 12))       
+
+# Remover o titulo da legenda
+bp + theme(legend.title = element_blank())
+
+#Remover a legenda
+bp + guides(fill = FALSE)
+
+#Modificando textos
+bp + scale_fill_discrete(name = "Experimento",
+                         breaks = c("ctrl", "trt1", "trt2"),
+                         labels = c("Control", "Treatment 1", "Treatment 2"))
+
+#Modificando as cores
+bp + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+#Modificando a posicao da legenda
+bp + theme(legend.position="top")  #bottom, left, right
+```
+
+### Personalização dos eixos
+
+```{r}
+# Histograma 
+ggplot(mtcars, aes(x = mpg)) +
+  geom_histogram(binwidth = 2, fill = "blue", color = "black", alpha = 0.8) +
+  labs(x = "Milhas por Galão", y = "Frequência") +
+  scale_x_continuous(breaks = seq(0, 40, by = 2), limits = c(10, 35)) +
+  scale_y_continuous(breaks = seq(0, 10, by = 2)) +
+  theme_minimal()
+```
+
+### Personalização do tema
+
+```{r}
+# theme()
+
+# Rótulos dos eixos 
+# axis.text.x = element_text(angle = 45, hjust = 1)
+# axis.text.y = element_text(angle = 0, hjust = 1)
+  
+# Tamanho do texto dos títulos dos eixos
+# axis.title = element_text(size = 14)         
+   
+# Tamanho e alinhamento do título do gráfico
+# plot.title = element_text(size = 16, hjust = 0.5)
+
+# Linhas da grade: major = principal | minor = secundária
+# panel.grid.major.x = element_line(color = "", linetype = "")
+# panel.grid.minor.x = element_line(color = "", linetype = "")
+# panel.grid.major.y = element_line(color = "", linetype = "")
+# panel.grid.minor.y = element_line(color = "", linetype = "")
+# linetype: solid(sólida), dashed(tracejada), dotted(pontilhada) 
+
+# Remover todas as linhas da grade
+# panel.grid = element_blank()  
+
+# Remover linhas verticais da grade
+# panel.grid.major.x = element_blank()  
+# panel.grid.major.y = element_blank()  
+
+# Remover linhas horizontais da grade
+# panel.grid.minor.y = element_blank()
+# panel.grid.minor.x = element_blank()
+```
+
+### Gráfico de densidade
+
+```{r}
+ggplot(mtcars, aes(x = hp)) +
+  geom_density(fill = "skyblue", color = "darkblue", alpha = 0.7) +
+  labs(x = "Potência em cavalos (hp)",
+       y = "Densidade") +
+  theme_minimal()
+```
+
+### Gráfico de pizza
+
+```{r}
+ggplot(mtcars, aes(x = "", fill = factor(cyl))) +
+  geom_bar(width = 1, stat = "count") +
+  geom_text(aes(label = ..count..), stat = "count", position = position_stack(vjust = 0.5)) +
+  coord_polar("y") +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank()
+  )
+
+dados_2007 <- gapminder[gapminder$year == 2007, ]
+soma_populacao_por_continente <- aggregate(pop ~ continent, data = dados_2007, sum)
+
+ggplot(soma_populacao_por_continente, aes(x = "", y = pop, fill = continent)) +
+  geom_bar(width = 1, alpha = 0.7, stat = "identity") +
+  coord_polar("y") +
+  labs(title = "Proporção da População Mundial por Continente em 2007") +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank()
+  )
+
+```
+
+### Gráfico para séries temporais
+
+```{r}
+print(economics)
+
+#Variações percentuais para a coluna psavert 
+economics$returns_perc <- c(0, diff(economics$psavert)/economics$psavert[-length(economics$psavert)])
+
+
+ggplot(economics, aes(x=date)) + 
+  geom_line(aes(y=returns_perc)) + 
+  labs(title="Variação dos retornos percentuais ao longo do tempo", 
+       caption="Source: Economics", 
+       y="Returns %")
+
+##Por mês
+library(lubridate)
+economics_m <- economics[1:24, ]
+
+lbls <- paste0(month.abb[month(economics_m$date)], " ", lubridate::year(economics_m$date))
+brks <- economics_m$date
+
+ggplot(economics_m, aes(x=date)) + 
+  geom_line(aes(y=returns_perc), color = "red") + 
+  labs(title="Série temporal por mês das 24 primeiras observações", 
+       caption="Source: Economics", 
+       y="Returns %") +  
+  scale_x_date(labels = lbls, 
+               breaks = brks) +  
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5),  
+        panel.grid.minor = element_blank())  
+
+##Por ano
+economics_y <- economics[1:90, ]
+
+brks <- economics_y$date[seq(1, length(economics_y$date), 12)]
+lbls <- lubridate::year(brks)
+
+ggplot(economics_y, aes(x=date)) + 
+  geom_line(aes(y=returns_perc), color = "green") + 
+  labs(title="Série temporal por ano das 90 primeiras observações", 
+       y="Returns %") + 
+  scale_x_date(labels = lbls, 
+               breaks = brks) +  
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5),  
+        panel.grid.minor = element_blank())  
+```
+
+### Gráfico sazonal
+
+```{r}
+library(forecast)
+
+head(AirPassengers)
+
+ggseasonplot(AirPassengers) + labs(title="International Airline Passengers")
+
+head(nottem)
+
+subset_nottem <- window(nottem, start=c(1920, 1), end=c(1925, 12))
+
+ggseasonplot(subset_nottem) + labs(title="Air temperatures at Nottingham Castle")
+```
+
+### Heatmap
+
+```{r}
+head(airquality)
+
+ggplot(airquality, aes(x = Month, y = Day, fill = Temp)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(x = "Mês",
+       y = "Dia",
+       fill = "Temperatura") +
+  theme_minimal()
+
+head(iris)
+
+ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Sepal.Width)) +
+  geom_tile(color = "black") +
+  geom_text(aes(label = Sepal.Width), color = "white", size = 2) +
+  coord_fixed()  +
+  labs(x = "Espécie",
+       y = "Comprimento da Sépala",
+       fill = "Largura da Sépala") +
+  theme_minimal()
+```

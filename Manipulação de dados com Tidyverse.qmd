@@ -1,0 +1,339 @@
+---
+title: "Manipulação de dados com Tidyverse"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+## Banco de dados
+
+```{r}
+library(gapminder)
+
+dados <- as.data.frame(gapminder)
+
+head(dados)
+```
+
+**country:** Nome do país
+
+**continent:** Continente ao qual o país pertence
+
+**year:** Ano da observação
+
+**lifeExp:** Expectativa de vida média
+
+**pop:** População total do país
+
+**gdpPercap:** Produto Interno Bruto per capita (PIB per capita) em dólares americanos
+
+```{r}
+glimpse(dados)
+
+summary(dados)
+```
+
+## DplyR
+
+**Funções:**
+
+-   select - seleciona colunas específicas de um dataframe. Permite que você filtre e mantenha apenas as variáveis que são relevantes para a análise.
+
+-   arrange - ordena linhas de um dataframe com base em uma ou mais colunas.
+
+-   filter - extrai subconjuntos de linhas de um dataframe com base em condições lógicas.
+
+-   group_by - agrupa linhas de um dataframe com base em uma ou mais colunas.
+
+-   summarise - resume os dados dentro de cada grupo criado pela função group_by. Ela pode ser usada com várias funções de resumo, como mean, sum, min e max.
+
+-   mutate - cria ou modifica colunas em um dataframe. É frequentemente utilizada para adicionar novas variáveis derivadas de variáveis existentes.
+
+-   rename - renomeia colunas do dataframe.
+
+## select
+
+```{r}
+#Manter apenas as colunas "country", "year" e "gdpPercap"
+dados_selecionados1 <- dados %>%
+  select(country, year, gdpPercap)
+
+head(dados_selecionados1)
+
+#Excluir as colunas gdpPercap e lifeExp
+dados_selecionados2 <- dados %>%
+  select(-gdpPercap, -lifeExp)
+
+head(dados_selecionados2)
+```
+
+## arrange
+
+```{r}
+#Ordem crescente Populacional
+dados_ordenados1 <- dados %>%
+  arrange(pop)
+
+head(dados_ordenados1)
+
+#Ordem decrescente por ano
+dados_ordenados2 <- dados %>%
+  arrange(desc(year))
+
+head(dados_ordenados2)
+
+# Ordenar por país e, dentro de cada país, por população
+dados_ordenados3 <- dados %>%
+  arrange(country, pop)
+
+head(dados_ordenados3)
+
+# Ordenar por ano dentro de cada continente
+dados_ordenados4 <- dados %>%
+  arrange(continent, year)
+
+head(dados_ordenados4)
+```
+
+## filter, group_by e summarise
+
+```{r}
+#Filtrar por 2007, agrupar com continente e sumarizar a média da população
+x <- dados %>%
+  filter(year == 2007) %>%
+  group_by(continent) %>%
+  summarise(pop = mean(pop))
+
+head(x)
+
+
+#Filtrar por Brazil, agrupar por ano e sumarizar a média da expectativa de vida
+y <- dados %>%
+  filter(country == "Brazil") %>%
+  group_by(year) %>%
+  summarise(LifeExp = mean(lifeExp))
+
+head(y)
+```
+
+## mutate
+
+```{r}
+dados_mutados1 <- dados %>%
+  filter(year == 2002) %>%                    # Filtra para o ano de 2002
+  mutate(densidade_pop_media = sum(pop)/n())  # Calcula a densidade populacional média (soma da população dividida pelo número de países)
+
+head(dados_mutados1)
+
+dados_mutados2 <- dados %>%
+  filter(year %in% c(1952, 1992)) %>%     # Filtra para os anos 1952 e 1992
+  group_by(continent, country) %>%         # Agrupa por continente e país
+  mutate(pop_growth_rate = (pop[year == 1992] - pop[year == 1952]) / pop[year == 1952] * 100) %>%  # Calcula a taxa de crescimento da população
+  arrange(pop_growth_rate) #Organiza do menor crescimento para o maior
+
+head(dados_mutados2)
+```
+
+## rename
+
+```{r}
+# Renomear a coluna "gdpPercap" para "PIB_Percap" 
+dados_renomeados <- dados %>% 
+  rename(PIB_Percap = gdpPercap)
+
+head(dados_renomeados)
+```
+
+## TidyR
+
+**Funções:**
+
+-   unit - combina (une) duas ou mais colunas de um dataframe em uma única coluna.
+
+-   separate - divide (separa) uma coluna em várias colunas com base em um caractere delimitador.
+
+-   pivot_longer - transforma um dataframe de formato amplo para longo, ou seja, une múltiplas colunas em uma só e cria uma nova coluna indicando a variável original de cada valor.
+
+-   pivot_wider - transforma um dataframe de formato longo para amplo, ou seja, divide os valores de uma única coluna em múltiplas colunas com base em outra coluna que atua como identificador.
+
+## unite
+
+```{r}
+# Unir as colunas "país" e "continente" em uma única coluna
+dados <- dados %>%
+  unite(country_continent, country, continent, sep = "_")
+
+head(dados)
+```
+
+## separate
+
+```{r}
+# Separar a coluna country_continent em país e continente
+dados <- dados %>%
+  separate(country_continent, into = c("country", "continent"), sep = "_", remove = TRUE)
+
+head(dados)
+```
+
+## pivot_longer
+
+```{r}
+# Unir as colunas "gdpPercap" e "pop" e criar uma nova coluna com os valores de cada uma
+dados_longos <- pivot_longer(dados, cols = c(gdpPercap, pop), names_to = "variavel", values_to = "valor")
+
+head(dados_longos)
+```
+
+## pivot_wide
+
+```{r}
+# Cada país possuir sua própria coluna para "gdpPercap" e "pop"
+dados_largos <- pivot_wider(dados, names_from = country, values_from = c(gdpPercap, pop))
+
+head(dados_largos)
+```
+
+## StringR
+
+**Funções:**
+
+-   str_c - une strings.
+-   str_split - separa strings.
+-   str_length - conta o número de carcteres em uma string.
+-   str_to_upper - converte string para caixa alta.
+-   str_to_lower - converte string para caixa baixa.
+-   str_sub - extrai os primeiros ou os últimos n caractéres de uma string.
+-   str_detect - verifica se uma string contém um padrão específico. Retorna um vetor lógico indicando se a string contém ou não o padrão.
+-   str_extract - extrai o padrão de uma string.
+-   str_replace - substitui padrões em strings.
+
+## str_c e str_split
+
+```{r}
+#Unir as colunas 'country' e 'continent'
+concatenated <- dados %>%
+  mutate(country_continent = str_c(country, " ", continent)) %>%
+  select(-country, -continent)
+
+head(concatenated)
+
+# Dividir a coluna 'country_continent' nos espaços
+split <- concatenated %>%
+  mutate(country_continent_parts = str_split(country_continent, " ", n = 2))
+
+head(split)
+```
+
+## str_length, str_to_upper e str_to_lower
+
+```{r}
+dados_modified <- dados %>%
+  mutate(country_length = str_length(country),
+         continent_upper = str_to_upper(continent),
+         continent_lower = str_to_lower(continent))
+
+head(dados_modified)
+```
+
+## str_sub
+
+```{r}
+#Extrair os primeiros 4 caractéres dos países
+dados_str_sub_1 <- dados %>%
+  mutate(first_four_chars = str_sub(country, end = 4))
+
+head(dados_str_sub_1)
+
+#Extrair os últimos 3 últimos caracteres dos países
+dados_str_sub_2 <- dados %>%
+  mutate(last_three_chars = str_sub(country, start = -3))
+
+head(dados_str_sub_2)
+
+# Extrair os primeiros 2 caracteres da expectativa de vida
+dados_str_sub_3 <- dados %>%
+  mutate(LifeExp = str_sub(as.character(lifeExp), end = 2)) %>%
+  select(-lifeExp)
+
+head(dados_str_sub_3)
+
+# Extrair os últimos 2 digitos do ano
+dados_str_sub_4 <- dados %>%
+  mutate(years = str_sub(as.character(year), start = -2)) %>%
+  select(-year)
+
+head(dados_str_sub_4)
+```
+
+## str_detect
+
+```{r}
+# Verificar padrões nos nomes dos países
+detected <- dados %>%
+  arrange(pop) %>%
+  mutate(start_s = str_detect(country, "S"),
+         end_i = str_detect(country, "i$"))
+
+head(detected)
+
+detected2 <- dados %>%
+  arrange(year) %>%
+  mutate(seq_ia = str_detect(country, "ia"),
+         seq_Al = str_detect(country, "Al"))
+
+head(detected2)
+
+#Extrair linhas onde a coluna 'country' começa com "P" ou "R"
+detected3 <- dados %>%
+  filter(str_detect(country, "^[PR]"))
+
+head(detected3)
+
+# Extrair linhas onde a coluna 'country' termina com "an"
+detected4 <- dados %>%
+  filter(str_detect(country, "ar$"))
+
+head(detected4)
+```
+
+## str_extract
+
+```{r}
+extract1 <- dados %>%
+  filter(!is.na(gdpPercap)) %>%  # Filtrar linhas onde gdpPercap não é vazio
+  #Número 9 seguido de ponto "." e depois um número de 0 a 9
+  mutate(PIBp = as.numeric(str_extract(gdpPercap, "[9]\\.[0-9]")))
+
+head(extract1)
+
+#Extrair os primeiros três caracteres da coluna continent
+extract2 <- dados %>%
+  mutate(continent_extracted = str_extract(continent, "^.{0,3}"))
+
+head(extract2)
+```
+
+## str_replace
+
+```{r}
+# Substituir "United States" por "USA" na coluna 'country'
+replace_1 <- dados %>%
+  filter(country == "United States") %>%
+  mutate(country_replaced_1 = str_replace(country, "United States", "USA")) %>%
+  select(-gdpPercap, -year) 
+  
+head(replace_1)
+
+# Substituir todas as ocorrências de "a" por "X" na coluna 'country'
+replace_2 <- dados %>%
+  mutate(country_replaced_2 = str_replace(country, "a", "X")) %>%
+  select(-country)
+
+head(replace_2)
+```

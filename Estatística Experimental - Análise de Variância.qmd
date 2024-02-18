@@ -1,0 +1,335 @@
+---
+title: "Estatística Experimental - Análise de Variância"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+## Delineamento Inteiramente Casualizado - DIC
+
+```{r}
+dic <- data.frame(
+  TRAT = c(1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4),
+  PROD = c(90, 98, 95, 93, 56, 59, 63, 51, 75, 73, 71, 89, 64, 68, 65, 63),
+  MAT = c(160, 155, 157, 153, 120, 115, 117, 135, 133, 130, 131, 132, 115, 110, 112, 113),
+  ALP = c(150, 145, 147, 120, 132, 137, 135, 136, 166, 164, 163, 160, 132, 135, 137, 134)
+)
+
+print(dic)
+```
+
+### Teste de normalidade e homogeneidade de variância
+
+```{r}
+##Normalidade
+
+#Teste de Shapiro-wilk
+shapiro.test(dic$PROD)
+shapiro.test(dic$MAT)
+shapiro.test(dic$ALP)
+
+##Homogeneidade
+
+#Teste de Bartlet
+bartlett.test(dic$PROD~dic$TRAT, dic)
+bartlett.test(dic$MAT~dic$TRAT, dic)
+bartlett.test(dic$ALP~dic$TRAT, dic)
+```
+
+## Análise de Variância - ANOVA
+
+```{r}
+dic$TRAT<-as.factor(dic$TRAT)
+
+par(mfrow=c(2,2))
+
+p<-aov(dic$PROD~dic$TRAT,dic)
+anova(p)
+plot(p)
+
+
+m<-aov(dic$MAT~dic$TRAT,dic)
+anova(m)
+plot(m)
+
+
+a<-aov(dic$ALP~dic$TRAT,dic)
+anova(a)
+plot(a)
+```
+
+### 
+
+### Remoção de outliers
+
+```{r}
+##MATURIDADE
+
+# Identificar e remover outliers
+outliers_m <- boxplot.stats(residuals(m))$out
+dados_sem_outliers_m <- dic[!(residuals(m) %in% outliers_m), ]
+
+# Ajuste do modelo de ANOVA sem outliers
+m1 <- aov(dados_sem_outliers_m$MAT ~ dados_sem_outliers_m$TRAT, data = dados_sem_outliers_m)
+anova(m1)
+
+plot(residuals(m1) ~ dados_sem_outliers_m$TRAT, dados_sem_outliers_m, main = "Maturidade (sem outliers)")
+
+```
+
+### Testes de comparações de médias
+
+```{r}
+library(agricolae)
+
+# Teste de Tukey
+
+tukey_result <- HSD.test(p, "dic$TRAT", group = TRUE)
+plot(tukey_result, main = "Teste de Tukey para Produtividade")
+
+tukey_result <- HSD.test(m1, "dados_sem_outliers_m$TRAT", group = TRUE)
+plot(tukey_result, main = "Teste de Tukey para Maturidade")
+
+tukey_result <- HSD.test(a, "dic$TRAT", group = TRUE)
+plot(tukey_result, main = "Teste de Tukey para Altura de planta")
+```
+
+### Análise com o pacote ExpDes
+
+```{r}
+library(ExpDes.pt)
+
+# Comparação multipla - mcomp: tukey, duncan, sk.
+# Homogeneidade de variâncias - hvar: bartlett, levene.
+
+#PRODUTIVIDADE
+resultado1<- dic(dic$TRAT, dic$PROD, quali = TRUE, mcomp = "tukey",hvar= "bartlett", sigT = 0.05, sigF = 0.05)
+
+#MATURIDADE
+resultado2<- dic(dados_sem_outliers_m$TRAT, dados_sem_outliers_m$MAT, quali = TRUE, mcomp = "tukey",hvar= "bartlett", sigT = 0.05, sigF = 0.05)
+
+#ALTURA DE PLANTA
+resultado2<- dic(dic$TRAT, dic$ALP, quali = TRUE, mcomp = "tukey",hvar= "bartlett", sigT = 0.05, sigF = 0.05)
+
+
+```
+
+## Delineamento em Blocos Casualizados - DBC
+
+```{r}
+dbc <- data.frame(
+  trat = c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5),
+  rep = c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3),
+  nutri = c(83, 63, 55, 86, 69, 61, 103, 79, 79, 116, 81, 79, 132, 98, 91)
+)
+
+#rep é o bloco
+
+print(dbc)
+
+str(dbc)
+
+dbc$trat<-as.factor(dbc$trat)  
+dbc$rep<-as.factor(dbc$rep)
+
+str(dbc)
+```
+
+### Teste de normalidade e homogeneidade
+
+```{r}
+#Normalidade - Teste de Shapiro-wilk
+shapiro.test(dbc$nutri)
+
+#Homogeneidade - Teste de Bartlet
+bartlett.test(nutri ~ trat, data = dbc)
+```
+
+### Análise de variância - ANOVA
+
+```{r}
+resultdbc<-aov(dbc$nutri~dbc$trat+dbc$rep)
+anova(resultdbc)
+
+par(mfrow=c(2,2))
+
+plot(resultdbc)
+```
+
+### Teste de comparação de médias
+
+```{r}
+library(agricolae)
+
+# Teste de Tukey
+
+tukey_result <- HSD.test(resultdbc, "dbc$trat", group = TRUE)
+plot(tukey_result)
+```
+
+### Análise com o pacote ExpDes
+
+```{r}
+library(ExpDes.pt)
+
+resultdbc2<- dbc(dbc$trat, dbc$rep, dbc$nutri, quali = TRUE, mcomp = "tukey", sigT = 0.05, sigF = 0.05)
+```
+
+## Delineamento em Quadrado Latino - DQL
+
+```{r}
+dql <- data.frame(
+  trat = c(1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4),
+  coluna = c(1, 2, 3, 4, 2, 3, 4, 1, 3, 4, 1, 2, 4, 1, 2, 3),
+  linha = c(1, 2, 3, 4, 2, 3, 4, 1, 3, 4, 1, 2, 4, 1, 2, 3),
+  volume = c(450, 620, 680, 620, 780, 750, 990, 750, 660, 830, 750, 910, 690, 990, 760, 650)
+)
+
+print(dql)
+
+str(dql)
+
+dql$trat<-as.factor(dql$trat)  
+dql$coluna<-as.factor(dql$coluna)
+dql$linha<-as.factor(dql$linha)
+
+str(dql)
+```
+
+### Teste de normalidade e homogeneidade
+
+```{r}
+#Normalidade - Teste de Shapiro-wilk
+shapiro.test(dql$volume)
+
+#Homogeneidade - Teste de Bartlet
+bartlett.test(volume ~ trat, data = dql)
+```
+
+### Análise de variância - ANOVA
+
+```{r}
+resultdql<-aov(dql$volume~dql$trat+dql$coluna+dql$linha)
+anova(resultdql)
+
+par(mfrow=c(2,2))
+
+plot(resultdql)
+```
+
+### Teste de comparação de médias
+
+```{r}
+library(agricolae)
+
+# Teste de Tukey
+
+tukey_result <- HSD.test(resultdql, "dql$trat", group = TRUE)
+
+plot(tukey_result)
+```
+
+## Experimento com 2 fatores em DIC
+
+```{r}
+fatdic <- data.frame(
+  fat1 = rep(c(1, 1, 2, 2, 3, 3, 4, 4), each = 2),
+  fat2 = rep(c(1, 1, 2, 2), times = 4),
+  mseca = c(0.2, 0.18, 0.21, 0.18, 0.24, 0.16, 0.2, 0.19, 0.17, 0.22, 0.28, 0.2, 0.46, 0.23, 0.25, 0.39)
+)
+
+print(fatdic)
+
+fatdic$fat1<-as.factor(fatdic$fat1)
+fatdic$fat2<-as.factor(fatdic$fat2)
+```
+
+### Análise de variância - ANOVA
+
+```{r}
+resfatdic<-aov(fatdic$mseca~fatdic$fat1 + fatdic$fat2 + fatdic$fat1*fatdic$fat2)
+anova(resfatdic)
+
+par(mfrow=c(2,2)) 
+plot(resfatdic)
+```
+
+### Análise com o pacote ExpDes
+
+```{r}
+library(ExpDes.pt)
+
+fat2.dic(fatdic$fat1, fatdic$fat2, fatdic$mseca, quali = c(TRUE, TRUE), mcomp = "tukey", fac.names = c("F1", "F2"), sigT = 0.05, sigF = 0.05)
+```
+
+## Experimento com 2 fatores em DBC
+
+```{r}
+fatdbc <- data.frame(
+  inoc = rep(c("esterco", "mamona"), each = 12),
+  biod = rep(c(5, 10, 15, 20), each = 3, times = 2),
+  rep = rep(1:3, times = 8),
+  fresca = c(1.53, 1.51, 1.64, 1.53, 1.91, 1.31, 1.71, 1.59, 1.42, 1.71, 2.38, 1.49, 4.12, 1.96, 2.06, 3.42, 4.31, 4.2, 2.71, 2.89, 3.44, 2.04, 2.77, 2.76)
+)
+
+print(fatdbc)
+
+fatdbc$inoc<-as.factor(fatdbc$inoc)
+fatdbc$biod<-as.factor(fatdbc$biod)
+fatdbc$rep<-as.factor(fatdbc$rep)
+```
+
+### Análise de Variância - ANOVA
+
+```{r}
+resfatdbc<-aov(fatdbc$fresca~fatdbc$rep + fatdbc$inoc + fatdbc$biod + fatdbc$inoc*fatdbc$biod)
+anova(resfatdbc)
+
+par(mfrow=c(2,2)) 
+plot(resfatdbc) 
+```
+
+### Análise com o pacote ExpDes
+
+```{r}
+library(ExpDes.pt)
+
+fat2.dbc(fatdbc$inoc, fatdbc$biod, fatdbc$rep, fatdbc$fresca, quali = c(TRUE, TRUE), mcomp = "tukey", fac.names = c("inoc", "biod"), sigT = 0.05, sigF = 0.05)
+```
+
+## Parcelas subdivididas em DIC
+
+```{r}
+psddic <- data.frame(
+  floresta = rep(c("A", "A", "A", "A", "A", "A", "A", "A", "A", "B", "B", "B", "B", "B", "B", "B", "B", "B", "C", "C", "C", "C", "C", "C", "C", "C", "C"), each = 3),
+  desrama = rep(c(2, 5, 7), each = 9),
+  indiv = c(48, 47, 47, 79, 62, 65, 101, 105, 112, 90, 97, 114, 123, 145, 122, 172, 157, 177, 100, 101, 103, 130, 133, 140, 144, 147, 148)
+)
+
+psddic$floresta<-as.factor(psddic$floresta)
+psddic$desrama<-as.factor(psddic$desrama)
+
+resultado<-aov(psddic$indiv~psddic$floresta + Error(psddic$floresta) + psddic$desrama + psddic$desrama*psddic$desrama)
+
+summary(resultado)
+```
+
+## Parcelas subdivididas em DBC
+
+```{r}
+psddbc <- data.frame(
+  Doses = rep(c(0, 40, 80, 120), times = 12),
+  Tipo = rep(c("Cova", "Cova", "Cova", "Cova", "Sulco", "Sulco", "Sulco", "Sulco", "Lanco", "Lanco", "Lanco", "Lanco"), each = 4),
+  Bloco = rep(1:4, times = 12),
+  Prod = c(2778, 2618, 1164, 2996, 3302, 2671, 2782, 2502, 2938, 2813, 2560, 3049, 3013, 3787, 3142, 3604, 2467, 3284, 2773, 2280, 3653, 2653, 3529, 2258, 3900, 4356, 3560, 4013, 3338, 3369, 2507, 4200, 2422, 2760, 1747, 1853, 3711, 3284, 2556, 3284, 2702, 3520, 3382, 3524, 3156, 4369, 2831, 4222)
+)
+
+psddbc$Tipo<-as.factor(psddbc$Tipo)
+psddbc$Doses<-as.factor(psddbc$Doses)
+psddbc$Bloco<-as.factor(psddbc$Bloco)
+
+resultado<-aov(psddbc$Prod ~ psddbc$Bloco + psddbc$Tipo + Error(psddbc$Tipo) + psddbc$Doses + psddbc$Tipo*psddbc$Doses)
+
+summary(resultado)
+```

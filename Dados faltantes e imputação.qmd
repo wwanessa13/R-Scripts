@@ -1,0 +1,220 @@
+---
+title: "Dados faltantes e imputação"
+format: html
+execute: 
+  echo: true
+editor: visual
+---
+
+## Banco de dados
+
+```{r}
+dados <- airquality
+
+summary(airquality)
+
+dados$Solar.R <- as.numeric(dados$Solar.R)
+dados$Ozone <- as.numeric(dados$Ozone)
+```
+
+Leituras diárias dos seguintes valores de qualidade do ar de 1º de maio de 1973 a 30 de setembro de 1973.
+
+-   **`Ozone`**: Ozônio médio em partes por bilhão das 13:00 às 15:00 horas na Ilha Roosevelt.
+
+-   **`Solar.R`**: Radiação solar em Langleys na faixa de frequência 4000--7700 Angstroms das 08:00 às 12:00 horas no Central Park.
+
+-   **`Wind`**: Velocidade média do vento em milhas por hora às 07:00 e 10:00 horas no Aeroporto LaGuardia.
+
+-   **`Temp`**: Temperatura máxima diária em graus Fahrenheit no Aeroporto La Guardia.
+
+## Pesquisando por valores faltantes
+
+```{r}
+any(is.na(dados))
+
+library(naniar)
+
+n_complete(dados)
+
+n_miss(dados)
+
+n_miss(dados$Ozone)
+n_miss(dados$Solar.R)
+n_miss(dados$Wind)
+n_miss(dados$Temp)
+n_miss(dados$Month)
+n_miss(dados$Day)
+
+
+```
+
+## Visualizando dados faltantes
+
+```{r}
+#Crie dados de matriz de sombra
+dados2 <- as_shadow(dados)
+head(dados2)
+
+#Crie dados nabulares vinculando a sombra aos dados
+dados2 <- bind_shadow(dados)    
+head(dados2)
+
+#Vincule apenas as variáveis com valores ausentes
+dados2 <- bind_shadow(dados, only_miss = TRUE)   
+head(dados2)
+```
+
+```{r}
+library(tidyverse)
+```
+
+### Visualização por gráfico de densidade
+
+```{r}
+#Agrupar pela coluna Ozone_NA e ver a média do vento quando tem dado perdido de Ozone e quando não
+dados %>%
+  bind_shadow() %>%
+  group_by(Ozone_NA) %>%
+  summarize(mean = mean(Wind))
+
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Wind,
+             color = Ozone_NA)) +
+  geom_density()
+
+#Agrupar pela coluna Ozone_NA e ver a média da temperatura quando tem dado perdido de Ozone e quando não
+dados %>%
+  bind_shadow() %>%
+  group_by(Ozone_NA) %>%
+  summarize(mean = mean(Temp))
+
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Temp,
+             color = Ozone_NA)) +
+  geom_density()
+```
+
+### Visualização por boxplot
+
+```{r}
+#Agrupar pela coluna Solar.R_NA e ver a média do vento quando tem dado perdido de Ozone e quando não
+dados %>%
+  bind_shadow() %>%
+  group_by(Solar.R_NA) %>%
+  summarize(mean = mean(Wind))
+
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Solar.R_NA,
+             y = Wind)) +
+  geom_boxplot()
+
+#Agrupar pela coluna Solar.R_NA e ver a média da temperatura quando tem dado perdido de Ozone e quando não
+dados %>%
+  bind_shadow() %>%
+  group_by(Solar.R_NA) %>%
+  summarize(mean = mean(Temp))
+
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Solar.R_NA,
+             y = Temp)) +
+  geom_boxplot()
+
+```
+
+### Visualização por gráfico de pontos
+
+```{r}
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Temp,
+             y = Wind,
+             color = Ozone_NA)) +
+  geom_point()
+
+dados %>%
+  bind_shadow() %>%
+  ggplot(aes(x = Temp,
+             y = Wind,
+             color = Solar.R_NA)) +
+  geom_point()
+```
+
+## Imputando dados
+
+### Imputando com a média
+
+```{r}
+dados_imput_mean <- bind_shadow(dados) %>% 
+  impute_below_all() %>%
+  add_label_shadow()
+
+mean(dados$Ozone, na.rm = TRUE)
+mean(dados$Solar.R, na.rm = TRUE)
+
+head(dados)
+
+head(dados_imput_mean)
+
+```
+
+### Imputando com Regressão Linear
+
+```{r}
+PredicaoOz <- lm(Ozone ~ Wind + Temp, data = dados)
+summary(PredicaoOz)
+
+#(Intercept) -71.0332    
+#Wind         -3.0555     
+#Temp          1.8402
+
+# Ozone = NA / Wind = 14.3 / Temp = 56
+
+#Variavel de Resposta Estimada = −71.0332 + (−3.0555 × 14.3) + (1.8402 × 56) ≈ −11.98865
+
+PredicaoSR <- lm(Solar.R ~ Wind + Temp, data = dados)
+summary(PredicaoSR)
+
+#Intercept -76.3621        
+#Wind          2.2109       
+#Temp          3.0746
+
+# Solar.R = NA / Wind = 14.3 / Temp = 56
+
+#Variavel de Resposta Estimada = −76.3621 + (2.2109 × 14.3) + (3.0746 × 56) ≈ 127.26
+
+```
+
+```{r}
+library(simputation)
+
+dados_imput_lm <- dados %>%
+  bind_shadow() %>%
+  impute_lm(Solar.R ~ Wind + Temp) %>%
+  impute_lm(Ozone ~ Wind + Temp) %>%
+  add_label_shadow()
+
+head(dados)
+
+head(dados_imput_lm)
+```
+
+## Comparando os modelos
+
+```{r}
+Compare <- bind_rows(mean = dados_imput_mean,
+                    lm = dados_imput_lm,
+                    .id = "imp_model")
+
+ggplot(Compare, 
+       aes(x = Solar.R, 
+           y = Ozone, 
+           color = any_missing)) +
+  geom_point() + 
+  facet_wrap(~imp_model)
+```
+
+Percebe-se que a imputação com Regressão Linear é melhor do que com a média.
